@@ -1,7 +1,6 @@
 from gps_utils import startTerminal
-
 def main():
-    startTerminal()
+	startTerminal()
 
-#run main
+# run main
 main()

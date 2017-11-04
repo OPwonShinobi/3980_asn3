@@ -7,8 +7,7 @@ def printData(dataStream):
 	#this should be explicit
 	#hard code 4 now
 	# satellitesFound = len(datastream.SKY['satellites'])
-	print("im called")
-	satellitesFound = 0;
+	satellitesFound = dataStream;
 	lat = "49.250624 N"
 	lon = "123.003349 W"
 	prn = [21, 29, 6, 27]
