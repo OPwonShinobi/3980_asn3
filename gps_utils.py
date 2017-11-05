@@ -14,30 +14,31 @@ def on_press(key):
         return False
 
 def startTerminal():
-	printWelcomePrompt(1)	
-	bContinueRunning = True
-
-	while bContinueRunning:
-		# if not userInput:
+	printWelcomePrompt(True)	
+	while True:
 		try:
 			userInput = input(">>> ")
 			if userInput.isalpha() and userInput.lower() == "start":
 				#start checking keyboard for q key in background
 				keyboard.Listener(on_press=on_press).start()
-				continuousReadDummy()
-				#stop checking keyboard for q key in background 
-				keyboard.Listener(on_press=on_press).stop()
-				# print new prompt
-				printWelcomePrompt(2)
+				# this throws exception
+				continuousRead()
+				# don't print this if exited
 			elif userInput.isalpha() and userInput.lower() == "exit":
-				bContinueRunning = False	
+				return
 			else:
 				print(">>> Invalid input, please enter 'start' or 'exit'")
+			#this ran when input = start, and when no device found (exception raised) 
+			printWelcomePrompt(False)	
 		except Exception as e: 
-			print(e)
+			print("Warning: " + str(e))
+			printWelcomePrompt(False)
+		finally:	
+			#stop checking keyboard for q key in background 
+			keyboard.Listener(on_press=on_press).stop()
 
-def printWelcomePrompt(firstRun=1):
-    if firstRun == 1:
+def printWelcomePrompt(firstRun):
+    if firstRun:
         print("*{:*<70}*".format("*"))
         print("* {:<69}*".format("A dumb GPS terminal program."))
         print("* {:<69}*".format("Enter 'start' to start reading from your GPS"))
@@ -64,29 +65,44 @@ def continuousReadDummy():
 
 
 def continuousRead():
-	# calls constructor of gpsd daemon's interface
-	gpsSocket = gps3.GPSDSocket()
-	# calls constructor of json data stream adapter
-	jsonBuffer = gps3.DataStream()
-	# connects to port
-	gpsSocket.connect()
-	# sets the ?WATCH= json tag to enabled
-	gpsSocket.watch()
-	# wait goes here
-	print("pt A")
-	# gpsSocket.next(5000)
-	# updatedData = None
-	for updatedData in gpsSocket:
-		print("pt B")
-	if updatedData:
-		print("pt C")
-		# now data_stream has the json as dict 
-		jsonBuffer.unpack(updatedData)
-		print("pt D")
-	print("pt E")		
-	printData(updatedData)
-	print("pt F")
-	return False
+	while not globalKillSwitch:
+		try:			
+			# calls constructor of gpsd daemon's interface
+			gpsSocket = gps3.GPSDSocket()
+			# calls constructor of json data stream adapter
+			jsonBuffer = gps3.DataStream()
+			# connects to port
+			gpsSocket.connect()
+			# sets the ?WATCH= json tag to enabled
+			gpsSocket.watch()
+			# gpsSocket.next(5000) maybe, idk
+			# deal with all data coming in from socket
+			for incomingData in gpsSocket:
+				# valid data
+				if incomingData:
+					# now jsonBuffer has the json as dict 
+					jsonBuffer.unpack(incomingData)
+				else:
+					# no gps device
+					# print(jsonBuffer.SKY)
+					if 'devices' not in jsonBuffer.SKY:
+						handleNoDeviceError()
+					# gps device, has no more valid data, stop scanning
+					else:
+						break
+			printData(jsonBuffer)
+			time.sleep(1)
+		except Exception as e:
+			raise e
 
-def errorCheck():
-	print("error_check called")
+def handleNoDeviceError():
+	global globalKillSwitch
+	globalKillSwitch = True
+	raise gpsDeviceException("no gps device found")
+
+class gpsDeviceException(Exception):
+		"""implementation of the default python exception class, to be raised when
+		something is wrong with the device, as noted by desc"""
+		def __init__(self, desc):
+			self.desc = desc
+				
