@@ -1,17 +1,9 @@
 from gpsprint import printData
 from gps3 import gps3
-from pynput import keyboard
+from datetime import datetime
 import time
 
 globalKillSwitch = False
-
-def on_press(key):
-    print('\n{0}'.format(key.char + " pressed, connection ending..."))
-    if key.char == 'q':
-        # Stop listener
-        global globalKillSwitch
-        globalKillSwitch = True
-        return False
 
 def startTerminal():
 	printWelcomePrompt(True)	
@@ -19,8 +11,6 @@ def startTerminal():
 		try:
 			userInput = input(">>> ")
 			if userInput.isalpha() and userInput.lower() == "start":
-				#start checking keyboard for q key in background
-				keyboard.Listener(on_press=on_press).start()
 				# this throws exception
 				continuousRead()
 				# don't print this if exited
@@ -30,12 +20,13 @@ def startTerminal():
 				print(">>> Invalid input, please enter 'start' or 'exit'")
 			#this ran when input = start, and when no device found (exception raised) 
 			printWelcomePrompt(False)	
+		except KeyboardInterrupt:
+			print("\n")
+			printWelcomePrompt(False)	
 		except Exception as e: 
+			raise e
 			print("Warning: " + str(e))
 			printWelcomePrompt(False)
-		finally:	
-			#stop checking keyboard for q key in background 
-			keyboard.Listener(on_press=on_press).stop()
 
 def printWelcomePrompt(firstRun):
     if firstRun:
@@ -63,7 +54,6 @@ def continuousReadDummy():
 		except KeyboardInterrupt as e:
 			print(e)
 
-
 def continuousRead():
 	while not globalKillSwitch:
 		try:			
@@ -75,23 +65,17 @@ def continuousRead():
 			gpsSocket.connect()
 			# sets the ?WATCH= json tag to enabled
 			gpsSocket.watch()
-			# gpsSocket.next(5000) maybe, idk
+			# gpsSocket.next(1) such a bad idea
 			# deal with all data coming in from socket
 			for incomingData in gpsSocket:
 				# valid data
 				if incomingData:
 					# now jsonBuffer has the json as dict 
 					jsonBuffer.unpack(incomingData)
-				else:
-					# no gps device
-					# print(jsonBuffer.SKY)
-					if 'devices' not in jsonBuffer.SKY:
-						handleNoDeviceError()
-					# gps device, has no more valid data, stop scanning
-					else:
-						break
-			printData(jsonBuffer)
-			time.sleep(1)
+					printData(jsonBuffer)
+					time.sleep(0.5)
+		except KeyboardInterrupt as e_intentional:
+			raise e_intentional
 		except Exception as e:
 			raise e
 
