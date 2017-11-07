@@ -1,4 +1,5 @@
-from gps_utils import startTerminal
+from gps_utils import startProgram
+# from gps_utils import startTerminal
 """
 Source: dcgps.py
 
@@ -10,7 +11,8 @@ Programmer: Alex Xia
 
 """
 def main():
-	startTerminal()
+	# startTerminal()
+	startProgram()
 
 # run main
 main()

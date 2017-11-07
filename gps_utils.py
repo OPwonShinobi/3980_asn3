@@ -1,9 +1,13 @@
 from gpsprint import printData
 from gps3 import gps3
 from datetime import datetime
+from gui import Example
 import time
 
 globalKillSwitch = False
+
+def startProgram():
+	Example().pack(side="top", fill="both", expand=True)
 
 def startTerminal():
 	printWelcomePrompt(True)	
@@ -49,7 +53,8 @@ def continuousReadDummy():
 		try:
 			satellitesFound = 4
 			print("globalKillSwitch: " + str(globalKillSwitch))
-			printData(satellitesFound)
+			# printData(satellitesFound)
+			printDataNew(satellitesFound)
 			time.sleep(1)
 		except KeyboardInterrupt as e:
 			print(e)
@@ -72,7 +77,8 @@ def continuousRead():
 				if incomingData:
 					# now jsonBuffer has the json as dict 
 					jsonBuffer.unpack(incomingData)
-					printData(jsonBuffer)
+					# printData(jsonBuffer)
+					printDataNew(jsonBuffer)
 					time.sleep(0.5)
 		except KeyboardInterrupt as e_intentional:
 			raise e_intentional

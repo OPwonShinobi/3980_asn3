@@ -1,5 +1,6 @@
 from datetime import datetime
 from gps3 import gps3
+# from gui import *
 
 def printData(gspData):
 	try:		
@@ -13,6 +14,7 @@ def printData(gspData):
 				used = satellite['used']
 				print("PRN = {:03} Elevation = {:03} Azimuth = {:03} SNR = {:03} Used = {}".format(
 					prn, el, azi, snr, used))
+
 		dateStr = str( datetime.now() )
 		if isinstance(satellites, list) and len(satellites) > 3:	
 			lat = gspData.TPV['lat']
@@ -26,6 +28,44 @@ def printData(gspData):
 					dateStr, latTuple[0], latTuple[1], latTuple[2], lonTuple[0], lonTuple[1], lonTuple[2]))
 		else:
 			print("{} {}".format(dateStr, "n/a"))	
+	except Exception as e:
+		raise e
+
+def printDataNew(gspData):
+	try:		
+		satellites = gspData.SKY['satellites']
+		if isinstance(satellites, list) and len(satellites) > 0:
+			for satellite in gspData.SKY['satellites']:
+				prn = int(satellite['PRN'])
+				el = int(satellite['el'])
+				azi = int(satellite['az'])
+				snr = int(satellite['ss'])
+				used = satellite['used']
+
+				# send msg to gui
+				msg = "PRN = {:03} Elevation = {:03} Azimuth = {:03} SNR = {:03} Used = {}".format(
+					prn, el, azi, snr, used)
+				printMessage(msg)
+
+		dateStr = str( datetime.now() )
+		if isinstance(satellites, list) and len(satellites) > 3:	
+			lat = gspData.TPV['lat']
+			lon = gspData.TPV['lon']
+			if lat == "n/a" or lon == "n/a":
+				msg = "{} Latitude: {} Longitude: {}".format(dateStr, lat, lon)
+				printMessage(msg)
+				# print("{} Latitude: {} Longitude: {}".format(dateStr, lat, lon))
+			else:
+				latTuple = decimalToDegMinSec(lat)
+				lonTuple = decimalToDegMinSec(lon) 
+
+				# send msg to gui
+				msg = "{}\nLatitude: {} Deg, {} Min, {} Sec, Longitude: {} Deg, {} Min, {} Sec".format(
+					dateStr, latTuple[0], latTuple[1], latTuple[2], lonTuple[0], lonTuple[1], lonTuple[2])
+				printMessage(msg)
+		else:
+			msg = "{} {}".format(dateStr, "n/a")
+			printMessage(msg)
 	except Exception as e:
 		raise e
 
