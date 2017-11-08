@@ -1,15 +1,52 @@
 from gpsprint import printData
 from gps3 import gps3
 from datetime import datetime
-from gui import Example
 import time
+"""
+Source: gps_utils.py
 
-globalKillSwitch = False
+This is the heart and lungs of this gpsd client.
+The GPSD daemon is called via a python interface, gps3, 
+On load, program enters a loop, waiting for and checking user input.
+If user enters start, program will enter a continuous read mode, and try to call the gspd daemon for
+a host and a port (the defaults are host=127.0.0.1, port=2947).
 
-def startProgram():
-	Example().pack(side="top", fill="both", expand=True)
+If a connection with a GPS dongle is successful, program enters a loop waiting for and 
+printing any satellite data coming in through the gpsd daemon.    
+
+The user can cancel the connection at any time, program returns to user input loop, until
+user calls the program to exit.
+
+Functions: 
+	startTerminal() : void
+	waitForUserInput() : void
+	printWelcomePrompt(firstRun=True) : void
+	continuousRead() : void
+
+Date: Nov 1 2017
+Designer: Keir Forster
+Programmer: Alex Xia   	
+"""
+
+# Function: start_terminal
+# Designer: Alex Xia
+# Programmer: Keir Forster
+# Date: Nov 1 2017
+# 
+# Bring program into state which waits for user input
 
 def startTerminal():
+	waitForUserInput():
+
+# Function: start_terminal
+# Designer: Alex Xia
+# Programmer: Keir Forster
+# Date: Nov 4 2017
+# 
+# Starts the loop which prompts and checks for user input.
+# Then depending on input('start' or 'exit') calls related GPS connection function
+
+def waitForUserInput():
 	printWelcomePrompt(True)	
 	while True:
 		try:
@@ -30,7 +67,17 @@ def startTerminal():
 		except Exception as e: 
 			raise e
 			print("Warning: " + str(e))
-			printWelcomePrompt(False)
+			printWelcomePrompt(False)	
+
+# Function: printWelcomePrompt
+# Designer: Alex Xia
+# Programmer: Alex Xia
+# Date: Nov 4 2017
+# Arguments: firstRun - boolean which determines if 
+# 			 it's user's first time running application
+# 
+# Prints pseudo-UI user instructions specific to if user has or hasn't start
+# completed a gps connection during life of program.
 
 def printWelcomePrompt(firstRun):
     if firstRun:
@@ -48,51 +95,33 @@ def printWelcomePrompt(firstRun):
         print("* {:<69}*".format("Or, diselect this terminal, and hit 'q' to stop a running connection."))
         print("*{:*<70}*".format("*"))
 
-def continuousReadDummy():
-	while not globalKillSwitch:
-		try:
-			satellitesFound = 4
-			print("globalKillSwitch: " + str(globalKillSwitch))
-			# printData(satellitesFound)
-			printDataNew(satellitesFound)
-			time.sleep(1)
-		except KeyboardInterrupt as e:
-			print(e)
-
+# Function: continuousRead
+# Designer: Alex Xia
+# Programmer: Keir Forster
+# Revision: Nov 6 2017 - used to check for pynput hotkey to terminate read mode.
+# 						 pynput module doesn't work properly on pi. Now 
+#						 uses ctrl+c (keyboardInterruptException) hack to stop read.
+# 						
+# After checking for gps device, puts program into continuous read mode.
 def continuousRead():
-	while not globalKillSwitch:
-		try:			
-			# calls constructor of gpsd daemon's interface
-			gpsSocket = gps3.GPSDSocket()
-			# calls constructor of json data stream adapter
-			jsonBuffer = gps3.DataStream()
-			# connects to port
-			gpsSocket.connect()
-			# sets the ?WATCH= json tag to enabled
-			gpsSocket.watch()
-			# gpsSocket.next(1) such a bad idea
-			# deal with all data coming in from socket
-			for incomingData in gpsSocket:
-				# valid data
-				if incomingData:
-					# now jsonBuffer has the json as dict 
-					jsonBuffer.unpack(incomingData)
-					# printData(jsonBuffer)
-					printDataNew(jsonBuffer)
-					time.sleep(0.5)
-		except KeyboardInterrupt as e_intentional:
-			raise e_intentional
-		except Exception as e:
-			raise e
-
-def handleNoDeviceError():
-	global globalKillSwitch
-	globalKillSwitch = True
-	raise gpsDeviceException("no gps device found")
-
-class gpsDeviceException(Exception):
-		"""implementation of the default python exception class, to be raised when
-		something is wrong with the device, as noted by desc"""
-		def __init__(self, desc):
-			self.desc = desc
-				
+	try:			
+		# calls constructor of gpsd daemon's interface
+		gpsSocket = gps3.GPSDSocket()
+		# calls constructor of json data stream adapter
+		jsonBuffer = gps3.DataStream()
+		# connects to port
+		gpsSocket.connect()
+		# sets the ?WATCH= json tag to enabled
+		gpsSocket.watch()
+		# deal with all data coming in from socket
+		for incomingData in gpsSocket:
+			# valid data
+			if incomingData:
+				# now jsonBuffer has the json as dict 
+				jsonBuffer.unpack(incomingData)
+				printData(jsonBuffer)
+				time.sleep(0.5)
+	except KeyboardInterrupt as e_intentional:
+		raise e_intentional
+	except Exception as e:
+		raise e

@@ -5,23 +5,21 @@ Source: gps_utils.py
 
 This is the heart and lungs of this gpsd client.
 The GPSD daemon is called via a python interface, gps3, 
-On execution, program enters a loop, calling and checking user commands.
-On user command, program will enter connection mode, and try to call the gspd daemon for
-a host and a port (defaults host=‘127.0.0.1’, port=2947).
+On load, program enters a loop, waiting for and checking user input.
+If user enters start, program will enter a continuous read mode, and try to call the gspd daemon for
+a host and a port (the defaults are host=127.0.0.1, port=2947).
+
 If a connection with a GPS dongle is successful, program enters a loop waiting for and 
 printing any satellite data coming in through the gpsd daemon.    
-If the user cancels the connection at any time, program returns to user input loop, until
+
+The user can cancel the connection at any time, program returns to user input loop, until
 user calls the program to exit.
 
-Flags in JSON are set, 
-
 Functions: 
-	on_press(key) : boolean
 	startTerminal() : void
+	waitForUserInput() : void
 	printWelcomePrompt(firstRun=True) : void
 	continuousRead() : void
-	handleNoDeviceError : void
-Class: gpsDeviceException : inherits Exception	
 
 Date: Nov 1 2017
 Designer: Keir Forster
@@ -36,37 +34,30 @@ As such, handles all printing of GPS data.
 However, printing of UI user instructions are handled in gps_utils.py
 since they don't print out any gps data.
 
-Functions: printData(gpsData)
+Functions: printData(gpsData): void
+		   decimalToDegMinSec(decimalStr): tuple
+		   truncateFloat(wholeFloat): float
 
 Date: Nov 1 2017
 Designer: Keir Forster
 Programmer: Alex Xia   	
 """
-
-# Global: globalKillSwitch
-# A global variable which controls
-# the termination of the main gps read loop ends
-globalKillSwitch = False
-
-# Function: on_press
+# Function: start_terminal
 # Designer: Alex Xia
-# Programmer: Alex Xia
-# Date: Nov 4 2017
-# Arguments: key - a key object  
+# Programmer: Keir Forster
+# Date: Nov 1 2017
 # 
-# Called when terminal is deselected and a key is pressed on the keyboard 
-# Used to check if 'q' is pressed, if true, set globalKillSwitch to True 
-def on_press(key):
+# Bring program into state which waits for user input
+def startTerminal():
 
 # Function: start_terminal
 # Designer: Alex Xia
 # Programmer: Keir Forster
 # Date: Nov 4 2017
 # 
-# Starts the pseudo-UI in the terminal
-# Waits for user input, does input validation. 
+# Starts the loop which prompts and checks for user input.
 # Then depending on input('start' or 'exit') calls related GPS connection function
-def startTerminal():
+def waitForUserInput():
 
 # Function: printWelcomePrompt
 # Designer: Alex Xia
@@ -91,31 +82,12 @@ def continuousReadDummy():
 # Function: continuousRead
 # Designer: Alex Xia
 # Programmer: Keir Forster
-# Date: Nov 1 2017
-# 
+# Revision: Nov 6 2017 - used to check for pynput hotkey to terminate read mode.
+# 						 pynput module doesn't work properly on pi. Now 
+#						 uses ctrl+c (keyboardInterruptException) hack to stop read.
+# 						
 # After checking for gps device, puts program into continuous read mode.
 def continuousRead():
-	pass
-
-# Function: continuousRead
-# Designer: Alex Xia
-# Programmer: Keir Forster
-# Date: Nov 1 2017
-# 
-# Called by continuousRead in case no gps device found
-# Stops the gps read loop by turning on globalKillSwitch
-def handleNoDeviceError():
-	pass
-
-# Class: gpsDeviceException
-# Designer: Alex Xia
-# Programmer: Alex Xia
-# Date: Nov 4 2017
-# 
-# Class which inherits from python Exception. 
-# Its constructor takes a single error message as argument. 
-# Meant to be raised when cases such as no gsp devices found occur. 
-class gpsDeviceException(Exception):
 	pass
 
 # Function: printData
@@ -131,3 +103,31 @@ class gpsDeviceException(Exception):
 # 	ie. 4 satellites allow more data to be printed than no satellites 
 def printData(gspData):
 	pass
+
+# Function: decimalToDegMinSec
+# Designer: Alex Xia
+# Programmer: Keir Forster
+# Revision: Nov 6 2017 - moved from gps_util to gps_print due to python 
+# 						 circular dependency problem
+# Argument: decimalStr - originally a string, turns out this works with
+#					  	floats as well
+# 
+# Converts a longitude or latitude string in the format of "49.250624 W"
+# into degrees, minutes, seconds in the format "49 deg 15min 2.2464sec"
+# and returns it as a 3-element tuple.
+# 		eg. above example would return tuple(49, 15, 2.2464)
+def decimalToDegMinSec(decimalStr):
+	pass
+
+# Function: truncateFloat
+# Designer: Alex Xia
+# Programmer: Alex Xia
+# Revision: Nov 6 2017 - moved from gps_util to gps_print due to python 
+# 						 circular dependency problem
+# Argument: wholeFloat - must be a float
+# 
+# Cleanly truncates the float part of a float from a whole
+# float without leaving a trail of zeros
+# 		eg. wholeFloat=3.14, return 0.14, never 0.1400000
+def truncateFloat(wholeFloat):
+	pass		

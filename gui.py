@@ -1,5 +1,5 @@
 import tkinter as tk
-# from gps_utils import *
+from gps_utils import continuousRead
 
 class Example:
     def __init__(self):
@@ -53,7 +53,7 @@ class Example:
 
     def startConnection(self):
         self.clearWindow()
-        continuousRead()
+        continuousRead(self)
 
     def endConnection(self):
         msg = "Connection ended.\n" 
@@ -69,10 +69,10 @@ class Example:
         tk.Label(self.frame, text=msg, anchor="w", justify="left", bg="#ffffff").grid(
                 row=0, column=0, sticky="w, e")
 
-    def printMessage(self, msg):
-        self.clearWindow()
-        self.displayText += msg
-        tk.Label(self.frame, text=self.displayText, anchor="w", justify="left", bg="#ffffff").grid(
+    def printMessage(ExampleInstance, msg):
+        ExampleInstance.clearWindow()
+        ExampleInstance.displayText += msg
+        tk.Label(ExampleInstance.frame, text=ExampleInstance.displayText, anchor="w", justify="left", bg="#ffffff").grid(
                 row=0, column=0, sticky="w, e")
 
     def clearWindow(self):
@@ -94,8 +94,7 @@ class Example:
         '''Reset the scroll region to encompass the inner frame'''
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
-
-    def startProgramTester():
+    def startProgram():
         Example().pack(side="top", fill="both", expand=True)
 
    
